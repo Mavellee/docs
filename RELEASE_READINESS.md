@@ -166,3 +166,66 @@ The **journey** is a scripted run against the live API with two brand-new accoun
 - A full restore on a scratch instance.
 - Two people on two physical devices: match, chat and play a game over mobile data, including a network drop mid-game.
 - Screen-reader pass (VoiceOver / TalkBack) through onboarding, Discover and chat.
+
+---
+
+# QA sprint 2 (30 October 2026)
+
+**Starting point:** commit `0d3120d`, a clean working tree. All checks passed as committed:
+- type check, lint and production build;
+- server tests 133/133 and web tests 58/58;
+- Prisma valid, with no drift between migrations and schema.
+
+## New probes
+
+| Probe | How | Result |
+|---|---|---|
+| Every API endpoint without a session | 106 endpoints found in the router source and called anonymously | All non-public endpoints → 401 |
+| Malformed IDs and empty bodies | Each endpoint with an `:id` called with `not-a-uuid`; every write called with `{}` | **No 500s** |
+| Unknown or foreign IDs | Each `:id` endpoint called with a random UUID | 4 return 200, all owner-scoped idempotent writes (`deleteMany` / `updateMany` filtered by the caller's id): remove a compatibility answer, mark a notification read, unblock, revoke a session. Not an access-control hole. |
+| Expired sessions | Session moved into the past | API → 401; socket refused (`hardening.test.ts`) |
+| Password change | Two devices, change on one | The other is signed out; the current one stays (`hardening.test.ts`) |
+| Everything a blocked person might try | Like, view profile and media, message (REST and socket), open the game, join the room | All refused; their earlier like disappears from Likes; reporting stays possible (`hardening.test.ts`) |
+| Interrupted upload | Connection dropped mid-way through a video upload | No partial file left in `.incoming`; no database row (`hardening.test.ts`) |
+| Rapid messages | 12 sends from one device without waiting; 35 concurrent sends from two people | **Failed before the fix**; see S1 |
+| Chat after reconnect | API stopped; a message written straight to the database (so no live event exists); API restarted | **Message never appeared before the fix**; see S2 |
+
+## Fixes
+
+| # | Issue | Sev | Evidence | Fix | Test | Result |
+|---|---|---|---|---|---|---|
+| S1 | Messages one person sent quickly were **stored out of order** (m0, m3, m1, m5…). Messages created in the same millisecond also had no stable order, so "load older" paging could skip a message at the page boundary. | P2 | `hardening.test.ts`: stored order `m0,m3,m1,m5,…` | Each socket handles its own sends one at a time, in arrival order. Every message (chat, game card, first message on a match) takes a per-conversation lock and a timestamp strictly after the previous one (`nextMessageTime`), with no schema change. | 12 rapid sends stay in order; 35 concurrent sends from two people get 35 distinct timestamps, each person's order preserved, paging 30 + 5 returns all 35 exactly once, both people see the same sequence. Run 3 times. | Pass |
+| S2 | After a dropped connection, the chat rejoined the room but **never fetched messages sent while offline**; they appeared only after a full page refresh. | P2 | Manual check in the browser with the API stopped and restarted | On every reconnect the chat refetches the latest page and merges it with what's on screen (`mergeMessages`: no duplicates, pending messages replaced by the server copy, unsent ones kept at the end). Live events use the same merge. | `web/src/test/messages.test.ts` (3); live browser check: after the restart the message appeared once and the "Reconnecting" banner cleared, without a page refresh | Pass |
+
+**Files changed:**
+- Server: `server/src/modules/chat/service.ts`, `server/src/modules/chatgames/service.ts`, `server/src/modules/matches/service.ts`, `server/src/realtime/socket.ts`
+- Web: `web/src/lib/messages.ts` (new), `web/src/pages/app/Messages.tsx`
+- Tests: `server/tests/hardening.test.ts` (new), `web/src/test/messages.test.ts` (new)
+
+**Database:** no schema change and no migration. The per-conversation lock is a transaction-scoped PostgreSQL advisory lock.
+
+## Results after the fixes
+
+| Check | Result |
+|---|---|
+| Type check / lint | Pass / pass |
+| Server tests | **139 / 139** (6 new) |
+| Web tests | **61 / 61** (3 new) |
+| Production build | Pass |
+| Prisma | Valid, no drift, migrations up to date |
+| `npm audit --omit=dev` | 4 high, unchanged (zod; Prisma toolchain); see O4, O5 |
+
+**Not run:**
+- No browser end-to-end suite exists in the repository.
+- No real SMTP send (no provider is configured).
+- No real phones.
+
+## Recommendation (unchanged)
+
+**Needs further verification:**
+- Blockers B1–B4 above.
+- The manual tests in section 9.
+
+After those, Knot is suitable for a **limited private beta**.
+
+O9 (one unexplained realtime miss in sprint 1) is now much less likely to matter for members, because S2 restores missed messages on reconnect.
