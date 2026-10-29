@@ -30,11 +30,16 @@ Base path `/api`. JSON in and out.
 |---|---|---|---|
 | GET/PATCH | `/profiles/me` | auth | Partial update: basics, `approxLocation` (rounded), languages, `interests` (slugs), `intentions`, `soughtIntentions`, age range, distance |
 | POST | `/profiles/me/publish` | auth | Requires name, gender, interested-in, intention, ≥1 photo |
-| POST | `/profiles/me/photos` | auth | multipart `photo`; JPEG/PNG/WebP by magic bytes, ≤5 MB, ≤6 photos, metadata stripped |
-| DELETE | `/profiles/me/photos/:id` | auth | |
-| PUT | `/profiles/me/photos/order` | auth | `{ids:[...]}` |
-| GET | `/profiles/:userId` | active | Public view + compatibility explanation; 404 if blocked/unpublished |
-| GET | `/photos/:id` | auth | Streams a photo; 404 between blocked users |
+| POST | `/profiles/me/photos` | auth | multipart `photo`; JPEG/PNG/WebP by magic bytes, ≤5 MB, ≤6 photos, metadata stripped. The first photo becomes the main photo |
+| POST | `/profiles/me/videos` | auth | multipart `video` (MP4/WebM by content, ≤`VIDEO_MAX_MB`, ≤`VIDEO_MAX_SECONDS` read from the file) + optional `poster` image; ≤2 videos; MP4 metadata scrubbed |
+| POST | `/profiles/me/photos/:id/replace` | auth | multipart `photo` or `video`(+`poster`), same kind as the item; keeps caption, position and main-photo status; old files deleted |
+| PATCH | `/profiles/me/photos/:id` | auth | `{caption?: string \| null, focusX?, focusY?}` (strict). Caption ≤200 chars, trimmed; empty or `null` clears it |
+| PUT | `/profiles/me/photos/:id/primary` | auth | Makes a photo the main photo (videos → 400) |
+| PUT | `/profiles/me/photos/order` | auth | `{ids:[...]}` — every photo and video, in display order |
+| DELETE | `/profiles/me/photos/:id` | auth | Deletes the item and its files; the next photo becomes main if needed |
+| GET | `/profiles/:userId` | active | Public view + compatibility explanation; 404 if blocked/unpublished. `media` = every approved photo and video in the owner's order with captions; `photos`/`photoIds` = images only, main photo first |
+| GET | `/photos/:id` | auth | Streams a photo or video (Range supported). Others: approved items of active, published, unblocked members only |
+| GET | `/photos/:id/poster` | auth | A video's still frame, same visibility rules |
 | GET | `/meta/interests`, `/meta/cities` | public | |
 
 ## Discovery, likes, matches

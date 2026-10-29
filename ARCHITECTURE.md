@@ -60,9 +60,33 @@ db/       Legacy Iceberg SQL (unchanged)
   product layer always has a curated fallback, enforces per-user and global daily
   limits, a concurrency cap, timeouts and output-length caps, and logs metadata
   only (`AIUsage` — no prompt or output text).
-- **Photos** are stored on disk (volume) under random names after magic-byte
-  validation and a 5 MB limit; only references live in PostgreSQL. They are served
-  through an authenticated route. Swappable for S3/Lightsail Object Storage.
+- **Profile media** (photos and short videos) share one table, `ProfilePhoto`, with
+  a `kind`, an optional per-item `caption` (≤ 200 characters), a `position`, an
+  `isPrimary` flag (images only, one per member, both enforced in SQL), and for
+  videos a `durationMs` and `posterKey`. Files live on disk (volume) under random
+  names; only keys and metadata are in PostgreSQL. Swappable for S3/Lightsail
+  Object Storage.
+  - Uploads stream to `UPLOAD_DIR/.incoming`, are validated **by content** (image
+    magic bytes; MP4 `ftyp` brands or WebM EBML — never the extension or the
+    client's MIME type) and removed from `.incoming` whatever the outcome.
+  - Images have EXIF/XMP/IPTC stripped. MP4 `udta`/`meta` boxes (where phones
+    store GPS and device details) are overwritten in place as `free` boxes of the
+    same size, so the file still plays and no offsets move.
+  - Video length is read from the container (`mvhd` / Matroska `Info/Duration`)
+    and enforced on the server (`VIDEO_MAX_SECONDS`, default 30); size by
+    `VIDEO_MAX_MB` (default 50). WebM files without a recorded duration are refused.
+  - The poster frame is captured **in the browser** (canvas, before upload) and
+    validated as an image on the server. There is no transcoding or server-side
+    thumbnailing: that would need ffmpeg in the API image (or a queue worker). Until
+    then, clips are stored as uploaded, and a video whose codec the viewer's
+    browser can't decode shows a clear "can't play here" message.
+  - Media is served through an authenticated route that answers Range requests, so
+    videos stream and seek. Others only see approved items of active, published,
+    unblocked members; owners and staff see everything of their own/reported.
+    Videos are click-to-play (`preload="none"`, never autoplay), so feeds load only
+    posters.
+  - Replacing or deleting an item removes its old files; deleting the main photo
+    promotes the next photo.
 - **Email** uses a `Mailer` interface. In development it logs links to the server
   console; SMTP is enabled by environment variables.
 

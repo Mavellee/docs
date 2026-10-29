@@ -15,7 +15,9 @@ secrets; it talks only to its own origin.
 | `COOKIE_SECURE` | `false` | Force `Secure` cookies (always on in production) |
 | `TRUST_PROXY` | `0` | Number of proxies in front of the API (`1` behind Caddy) |
 | `UPLOAD_DIR` | `./uploads` | Where photos are stored (a Docker volume in production) |
-| `MAX_UPLOAD_MB` | `5` | Upload size limit |
+| `MAX_UPLOAD_MB` | `5` | Photo and chat image upload size limit |
+| `VIDEO_MAX_MB` | `50` | Profile video upload size limit (checked on the server) |
+| `VIDEO_MAX_SECONDS` | `30` | Profile video length limit, read from the file itself |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | — | Outgoing email. Without `SMTP_HOST`, emails are logged to the console |
 | `AI_PROVIDER` | `none` | `none`, `ollama` or `openai-compatible` |
 | `AI_MODEL` | `llama3.2:3b` | Model name sent to the provider |
