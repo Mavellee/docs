@@ -76,8 +76,24 @@ Experts: `GET /workspace/queue`, `GET /workspace/history`, `GET /workspace/queue
 `POST /workspace/queue/:id/claim|request-info|complete|decline {message}`.
 
 ## Games `/games` (active)
-`GET /` · `POST /sessions {gameSlug,matchId?,questionCount}` · `GET /sessions` ·
-`GET /sessions/:id` · `POST /sessions/:id/answer {answer}` · `/skip` · `/next` (shared) · `/end`.
+Catalogue and solo play. `GET /catalog` · `GET /` · `POST /sessions {gameSlug,questionCount}` · `GET /sessions` ·
+`GET /sessions/:id` · `POST /sessions/:id/answer {answer}` · `/skip` · `/next` · `/end`.
+Games with a match are played inside the conversation (below).
+
+## In-chat games `/conversations/:id/games` (active, conversation members only)
+`GET /` (this conversation's games, newest first) · `POST / {gameSlug}` (one live game per conversation; 409 otherwise) ·
+`GET /:sessionId` · `POST /:sessionId/join` · `POST /:sessionId/answer {roundIndex, choice | text}` ·
+`/skip {roundIndex}` · `/next {roundIndex}` · `/note {roundIndex, note}` · `/verdict {roundIndex, correct}` · `/pause` · `/resume` · `/end`.
+
+- Every response is the caller's own view. The partner's answer is `null` until the round is `REVEALED`
+  (both have answered); the discussion prompt also appears only after the reveal.
+- **Skip rule:** either player may skip the current card while it is open. It is skipped for both, and any
+  answer already given to it is never revealed. `answer` rejects a `skip` field (and any other unknown field).
+- `roundIndex` is the round the client saw: stale answers get 409, and a repeated `next` is a no-op.
+- Socket.IO sends only `game:updated {conversationId, sessionId, version}` (plus `message:new` for timeline
+  cards); clients then fetch their own view. No answers travel over the socket.
+- Red Flag or Green Flag: 5 rounds drawn from 24 curated scenarios across 8 themes (one theme per round),
+  answers `Red Flag` · `Green Flag` · `It Depends`.
 
 ## Knot AI `/ai` (active)
 `POST /suggest` with `feature` one of `conversation_starter {matchId}`, `icebreaker {userId}`,
