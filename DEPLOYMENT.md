@@ -89,15 +89,19 @@ Request bodies, cookies and message text are never logged.
 docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.production logs -f api
 ```
 
-**Backups.** Daily at 02:30 UTC via cron, keeping 14 local copies. Copy them off the
-instance (S3 or Lightsail object storage) — a local-only backup does not survive losing
-the instance. Also enable Lightsail **automatic snapshots** for the instance.
+**Backups.** Daily at 02:30 UTC via cron, keeping 14 local copies. Each backup is a pair with
+one timestamp: `knot-<time>.dump` (PostgreSQL) and `knot-<time>-uploads.tar.gz` (every photo,
+video, poster and chat image). Restoring a database without its media leaves profiles pointing
+at missing files, so always keep the pair together. Copy them off the instance (S3 or Lightsail
+object storage) — a local-only backup does not survive losing the instance. Also enable
+Lightsail **automatic snapshots** for the instance.
 
 ```bash
 (crontab -l 2>/dev/null; echo "30 2 * * * $PWD/deploy/backup.sh >> $HOME/knot-backup.log 2>&1") | crontab -
 ```
 
-**Restore** (stops the API, replaces the database, restarts):
+**Restore** (stops the API, replaces the database, restores the matching uploads archive if it
+sits next to the dump, restarts):
 
 ```bash
 ./deploy/restore.sh deploy/backups/knot-YYYYMMDDTHHMMSSZ.dump
@@ -113,9 +117,9 @@ docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env.producti
 
 Schedule it daily with cron next to the backup job.
 
-**Uploads.** Photos live in the `uploads` Docker volume. They're included in instance
-snapshots but **not** in `pg_dump` backups; sync the volume to object storage if you need
-independent backups, or move uploads to S3/Lightsail object storage.
+**Uploads.** Photos and videos live in the `uploads` Docker volume. `backup.sh` archives it
+alongside each database dump; with 50 MB videos the archives grow quickly, so watch disk space
+and prefer moving uploads to S3/Lightsail object storage as the member count grows.
 
 ## 5. Cost control and monitoring
 
