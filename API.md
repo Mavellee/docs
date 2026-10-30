@@ -117,3 +117,18 @@ Games with a match are played inside the conversation (below).
 `GET /users?q`, `POST /users/:id/status {status,reason}`, `POST /photos/:id/reject {reason}`,
 `GET /experts?status`, `POST /experts/:id/decision {decision,note,credentialsVerified}`,
 `GET /audit-log`. Every mutating admin action writes to the append-only `AdminAuditLog`.
+
+## Couple space
+
+All routes require an active account. Everything below `/couple/doodles` and `/couple/me` works only while the two people are together.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/couple/me` | The open couple space (partner, games), or `null` |
+| GET | `/api/couple/matches/:id` | `NONE`, `REQUESTED_BY_ME`, `REQUESTED_BY_THEM` or `ACTIVE` |
+| POST | `/api/couple/matches/:id/{request,accept,decline,end}` | Ask, confirm, decline or cancel, end |
+| GET, POST | `/api/couple/doodles` | List doodles, start one |
+| GET, DELETE | `/api/couple/doodles/:id` | Read with strokes, delete |
+| GET | `/api/matches/:id/zodiac` | Just-for-fun sign card, or `null` unless both opted in |
+
+Socket events: `couple:join`, `doodle:stroke`, `doodle:undo` (saved) and `doodle:live` (relayed, never stored).
