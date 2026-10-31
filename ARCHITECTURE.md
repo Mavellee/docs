@@ -1,4 +1,4 @@
-# Knot — Architecture & Implementation Plan
+# Mavelle — Architecture & Implementation Plan
 
 ## 1. What was in the repository
 
@@ -7,7 +7,7 @@ setup in `db/` (10 hand-written migrations, PostGIS, astrologer review flow, cam
 events, a `pg`-based migration runner, seeds and a SQL smoke test). There was no
 backend server and no frontend.
 
-**Decision:** `db/` is left untouched. It remains runnable exactly as before. Knot
+**Decision:** `db/` is left untouched. It remains runnable exactly as before. Mavelle
 uses its own Prisma schema and its own database (`knot`), so nothing in the Iceberg
 database is migrated, altered or deleted. Reused ideas from Iceberg: ordered pair
 rows for matches (`userAId < userBId`), append-only audit log, consent-gated
@@ -15,7 +15,7 @@ review, soft-delete with a purge window, rounded locations only.
 
 Differences that made a straight reuse inappropriate:
 
-| Iceberg (`db/`)                         | Knot                                                        |
+| Iceberg (`db/`)                         | Mavelle                                                        |
 |-----------------------------------------|-------------------------------------------------------------|
 | Intent includes `open_to_astrology`     | Intentions are `SINGLE`, `SITUATIONSHIP`, `MARRIAGE`         |
 | Astrologer review gates chat            | Expert review is optional and never gates matching or chat   |
@@ -97,5 +97,5 @@ db/       Legacy Iceberg SQL (unchanged)
 3. Prisma schema, profiles, photos, discovery, likes, matches.
 4. Conversations, messages, Socket.IO, block/report/unmatch.
 5. Compatibility engine and expert workflow.
-6. Curated games (DB-seeded) and Knot AI.
+6. Curated games (DB-seeded) and Mavelle AI.
 7. Admin moderation + audit log, tests, Docker and Lightsail docs.

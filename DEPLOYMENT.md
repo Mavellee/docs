@@ -1,4 +1,4 @@
-# Deploying Knot to AWS Lightsail
+# Deploying Mavelle to AWS Lightsail
 
 > Nothing in this repository provisions cloud resources. These are the steps a person
 > runs; deployment is complete only once you've done them and the health check passes.

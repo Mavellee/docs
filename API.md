@@ -1,4 +1,4 @@
-# Knot API
+# Mavelle API
 
 Base path `/api`. JSON in and out.
 
@@ -100,7 +100,7 @@ Games with a match are played inside the conversation (below).
 - Red Flag or Green Flag: 5 rounds drawn from 24 curated scenarios across 8 themes (one theme per round),
   answers `Red Flag` · `Green Flag` · `It Depends`.
 
-## Knot AI `/ai` (active)
+## Mavelle AI `/ai` (active)
 `POST /suggest` with `feature` one of `conversation_starter {matchId}`, `icebreaker {userId}`,
 `bio_help {draft}`, `reflection`, `first_date {matchId}`, `explain_compatibility {userId}` →
 `{source:"ai"|"curated",label,suggestions[],note?}`. `GET /status`.

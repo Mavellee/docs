@@ -1,4 +1,4 @@
-# Knot private-beta functional audit
+# Mavelle private-beta functional audit
 
 Date: 29 October 2026 · Branch: `feature/knot-platform` · Environment: local dev (Docker Postgres, API on :4000, web on :5180)
 
@@ -29,7 +29,7 @@ Earlier sessions also covered responsive layouts at 375/390/768/1024/1440 and a 
 | # | Area | Evidence | Problem | Recommended fix | Tests needed |
 |---|---|---|---|---|---|
 | P1-1 | Email delivery in production | `server/src/lib/mailer.ts:36` uses SMTP only when `SMTP_HOST` is set, otherwise the console mailer; `deploy/.env.production.example` ships `SMTP_HOST=` empty | A production deploy without SMTP **silently logs verification and reset emails instead of sending them**. New users can never verify, so they can't use Discover, Likes, Chat or Games. | Choose an email provider and set the SMTP values. Make the API refuse to start in production without `SMTP_HOST`. *(Needs your choice of provider; some are paid.)* | Config test: production + no SMTP host → startup error. A manual end-to-end send on staging. |
-| P1-2 | Support contacts | `web/src/pages/public/ContentPages.tsx:266-268` lists `support@`, `safety@` and `privacy@knot.example` | Placeholder addresses: beta users have **no working way to reach support or report a safety concern off-platform**. | Replace them with real monitored addresses (needs your input). | None (content). |
+| P1-2 | Support contacts | `web/src/pages/public/ContentPages.tsx:266-268` lists `support@`, `safety@` and `privacy@mavelle.example` | Placeholder addresses: beta users have **no working way to reach support or report a safety concern off-platform**. | Replace them with real monitored addresses (needs your input). | None (content). |
 | P1-3 | Legal pages | Terms and Privacy pages are drafts, labelled as such on the page and in the footer | Inviting real users usually requires reviewed terms and a privacy policy, especially for 18+ verification, photos and expert data sharing. | Legal review before the beta invitation. | None (content). |
 
 ### P2 — should fix during the beta
@@ -84,7 +84,7 @@ Status: **Verified** = exercised live and/or by automated tests in this audit. *
 | Safety: report, block, unblock | Verified | Live: report 201, block hides the profile (404), unblock works | |
 | Settings `/app/settings` | Verified | Live: update persists, sessions list and revoke, data export 200; deletion covered by `safety.test.ts` | |
 | Notifications `/app/notifications` | Verified | Live: loads after like/match | |
-| Knot AI panels | Verified (fallback) | Live: with no provider, returns curated suggestions labelled "Suggestions from the Knot team"; `/ai/status` reports `available: false` | No paid AI dependency |
+| Mavelle AI panels | Verified (fallback) | Live: with no provider, returns curated suggestions labelled "Suggestions from the Mavelle team"; `/ai/status` reports `available: false` | No paid AI dependency |
 
 ## Security review summary
 

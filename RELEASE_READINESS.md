@@ -1,4 +1,4 @@
-# Knot — release readiness and QA sprint 1
+# Mavelle — release readiness and QA sprint 1
 
 Date: 30 October 2026 · Branch: `feature/knot-platform` (base commit `74834f3`) · Environment: local development (Docker PostgreSQL 16, API :4000, web :5180). No production environment exists yet; nothing was deployed.
 
@@ -12,7 +12,7 @@ What blocks inviting real people is mostly setup, not code:
 2. The support addresses are placeholders.
 3. The legal pages are unreviewed drafts.
 
-On top of that, video and touch reordering still need checking on real phones (section 9). Once the items in section 8 are done, Knot is suitable for a **limited, invite-only private beta** with the limits in section 5.
+On top of that, video and touch reordering still need checking on real phones (section 9). Once the items in section 8 are done, Mavelle is suitable for a **limited, invite-only private beta** with the limits in section 5.
 
 Under the QA Sprint classification: **Ready for further manual verification**.
 
@@ -226,6 +226,6 @@ The **journey** is a scripted run against the live API with two brand-new accoun
 - Blockers B1–B4 above.
 - The manual tests in section 9.
 
-After those, Knot is suitable for a **limited private beta**.
+After those, Mavelle is suitable for a **limited private beta**.
 
 O9 (one unexplained realtime miss in sprint 1) is now much less likely to matter for members, because S2 restores missed messages on reconnect.
